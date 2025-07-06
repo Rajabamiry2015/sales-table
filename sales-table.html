@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>جدول يومي لفريق المبيعات</title>
+<style>
+    body { font-family: 'Tahoma', sans-serif; direction: rtl; text-align: center; }
+    .container { border: 4px solid navy; border-radius: 15px; padding: 20px; width: 400px; margin: 20px auto; }
+    .header-box { background-color: navy; color: white; padding: 10px; font-weight: bold; border-radius: 8px; margin-bottom: 10px; }
+    .date-display { margin-bottom: 20px; font-weight: bold; }
+    .day-buttons button {
+        background-color: red; color: white; border: none; padding: 8px 12px; margin: 5px;
+        cursor: pointer; border-radius: 5px;
+    }
+    .day-buttons button:hover { background-color: darkred; }
+    .table-container { margin-top: 20px; display: none; }
+    table { width: 100%; border-collapse: collapse; background-color: white; color: black; }
+    th, td { border: 1px solid navy; padding: 8px; }
+    .manager { margin-top: 20px; font-weight: bold; }
+    .edit-section { margin-top: 20px; display: none; text-align: right; }
+    .edit-btn {
+        margin-top: 20px; background-color: navy; color: white;
+        padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;
+    }
+    .edit-btn:hover { background-color: darkblue; }
+    .password-section { margin-top: 20px; }
+    .name1 { color: darkgreen; background-color: #e0ffe0; font-weight: bold; }
+    .name2 { color: darkblue; background-color: #e0e7ff; font-weight: bold; }
+    .name3 { color: darkred; background-color: #ffe0e0; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">جدول يومي لفريق المبيعات</div>
+    <div class="date-display" id="date-display"></div>
+
+    <div class="day-buttons">
+        <button onclick="showTable('الأحد')">الأحد</button>
+        <button onclick="showTable('الإثنين')">الإثنين</button>
+        <button onclick="showTable('الثلاثاء')">الثلاثاء</button>
+        <button onclick="showTable('الأربعاء')">الأربعاء</button>
+        <button onclick="showTable('الخميس')">الخميس</button>
+    </div>
+
+    <div class="table-container" id="table-container">
+        <h3 id="day-title"></h3>
+        <table>
+            <tr>
+                <th>الاسم</th>
+                <th>الحالة</th>
+            </tr>
+            <tr>
+                <td class="name1">إنجي عثمان</td>
+                <td id="status1">تحميل...</td>
+            </tr>
+            <tr>
+                <td class="name2">وكيل الرحمن</td>
+                <td id="status2">تحميل...</td>
+            </tr>
+            <tr>
+                <td class="name3">رجب أميري</td>
+                <td id="status3">تحميل...</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="password-section" id="password-section">
+        <p>أدخل الرقم السري لتعديل الجدول:</p>
+        <input type="password" id="password-input">
+        <button onclick="checkPassword()">دخول</button>
+    </div>
+
+    <div class="edit-section" id="edit-section">
+        <h4>تعديل الجدول</h4>
+        <p>اختيار اليوم:
+            <select id="selectedDay">
+                <option value="الأحد">الأحد</option>
+                <option value="الإثنين">الإثنين</option>
+                <option value="الثلاثاء">الثلاثاء</option>
+                <option value="الأربعاء">الأربعاء</option>
+                <option value="الخميس">الخميس</option>
+            </select>
+        </p>
+        <p>إنجي عثمان: 
+            <select id="newStatus1">
+                <option value="موجود في المكتب">موجود في المكتب</option>
+                <option value="في المأمورية">في المأمورية</option>
+                <option value="إجازة">إجازة</option>
+            </select>
+        </p>
+        <p>وكيل الرحمن: 
+            <select id="newStatus2">
+                <option value="موجود في المكتب">موجود في المكتب</option>
+                <option value="في المأمورية">في المأمورية</option>
+                <option value="إجازة">إجازة</option>
+            </select>
+        </p>
+        <p>رجب أميري: 
+            <select id="newStatus3">
+                <option value="موجود في المكتب">موجود في المكتب</option>
+                <option value="في المأمورية">في المأمورية</option>
+                <option value="إجازة">إجازة</option>
+            </select>
+        </p>
+        <button onclick="applyChanges()">حفظ التغييرات</button>
+    </div>
+
+    <div class="manager">مدير المبيعات: أستاذ محمد عبد الله</div>
+    <button class="edit-btn" onclick="showPasswordSection()">تعديل الجدول</button>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwZXF6Lm9AxrPRLpdqZCs-Qy2jJO6OHisR11z546VX8xtj-Rk-5pxif-8ruWkbFdo-j/exec";
+const PASSWORD = "0000";
+let allData = {};
+
+async function fetchData() {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        allData = data;
+    } catch (err) {
+        alert("خطأ في تحميل البيانات من Google Sheet");
+    }
+}
+
+async function showTable(day) {
+    await fetchData();
+    document.getElementById("table-container").style.display = "block";
+    document.getElementById("day-title").innerText = "اليوم: " + day;
+
+    const dayData = allData[day];
+    if (dayData) {
+        document.getElementById("status1").innerText = dayData.status1;
+        document.getElementById("status2").innerText = dayData.status2;
+        document.getElementById("status3").innerText = dayData.status3;
+    } else {
+        document.getElementById("status1").innerText = "غير متوفر";
+        document.getElementById("status2").innerText = "غير متوفر";
+        document.getElementById("status3").innerText = "غير متوفر";
+    }
+}
+
+function showPasswordSection() {
+    document.getElementById("password-section").style.display = "block";
+}
+
+function checkPassword() {
+    const enteredPassword = document.getElementById("password-input").value;
+    if (enteredPassword === PASSWORD) {
+        document.getElementById("password-section").style.display = "none";
+        document.getElementById("edit-section").style.display = "block";
+    } else {
+        alert("الرقم السري غير صحيح!");
+    }
+}
+
+async function applyChanges() {
+    const selectedDay = document.getElementById("selectedDay").value;
+    const status1 = document.getElementById("newStatus1").value;
+    const status2 = document.getElementById("newStatus2").value;
+    const status3 = document.getElementById("newStatus3").value;
+
+    const payload = {
+        day: selectedDay,
+        status1,
+        status2,
+        status3
+    };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify(payload),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        const result = await response.text();
+        alert("تم حفظ التعديلات بنجاح");
+        showTable(selectedDay);
+        document.getElementById("edit-section").style.display = "none";
+    } catch (error) {
+        alert("فشل حفظ التعديلات");
+    }
+}
+
+const dateDisplay = document.getElementById("date-display");
+const today = new Date();
+const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+let dayName = days[today.getDay()];
+if (dayName === 'الجمعة' || dayName === 'السبت') {
+    dayName = 'الجمعة';
+}
+const dateString = today.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+dateDisplay.innerText = "تاريخ اليوم: " + dateString + " - اليوم: " + dayName;
+</script>
+
+</body>
+</html>
